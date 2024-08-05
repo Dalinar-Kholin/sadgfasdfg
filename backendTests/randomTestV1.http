@@ -1,0 +1,6 @@
+POST https://localhost:8080/api/login
+
+{
+"username": "niewiem",
+"password": "niewiem"
+}

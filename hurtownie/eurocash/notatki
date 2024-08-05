@@ -1,0 +1,17 @@
+aby wykonać request po token pod
+https://logowanie.eurocash.pl/connect/token
+potrzebujemy
+
+grant_type=authorization_code
+code=A9694C60B2AFFD1A43B445CAE4A89ED5D0C947C217AAAFF74C1B5C049E0B0C43-1   -- dawane nam jest w 2 requeście po zalogowaniu
+redirect_uri=https%3A%2F%2Feurocash.pl%2Fang%2Fdashboard
+code_verifier=TWx4VkRMd2JuLnhrN1FLOHhkZmpram82S05ZWHJMZmEyRE5JLW5FcWVPck5H  -- nie wiem gdzie się pojawia ani czemu
+client_id=EplOnline&alt=
+
+dane przesyłane są w 1 requestcie gdzie ani brave ani firefox nie widzi responsa --- trzeba robić poprzez mitmproxy
+
+
+
+csrf - jest generowany po stronie klienta
+code_verifier - jest generowany po stronie klienta
+potem

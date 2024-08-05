@@ -1,0 +1,32 @@
+.photo {
+    justify-content: center;
+    display: flex;
+    background-position: center;
+    background-size: cover;
+    overflow: hidden;
+    transition: transform 2s;
+}
+
+#appBarComp {
+    background-color: #222;
+    border-radius: 15px;
+}
+
+.Cont{
+    display: flex;
+    justify-content: center;
+}
+
+.photo:hover{
+    animation: rotate 10s running infinite alternate;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg) scale(1);
+    }
+    to {
+        transform: rotate(360deg) scale(20);
+
+    }
+}

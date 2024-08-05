@@ -1,0 +1,10 @@
+.hurtResultDiv{
+    display: flex;
+    gap: 10px; /* Przerwa między elementami */
+    align-items: center; /* Wyrównanie elementów w pionie */
+}
+
+.hurtResultDiv{
+    display: flex;
+    justify-content: center;
+}
