@@ -130,50 +130,55 @@ export default function MainSite() {
 
     useEffect(() => {
         setIsLoadingProduct(true)
-        getMultipleHurtResult(prodToSearch).then(data => {
-            const newOptItems: IItemInstance[] = []
-            const newAllResult: IAllResult[] = []
-            prodToSearch.map((item) => {
-                const ItemsMatchEan = data.get(item.Ean)
-                if (ItemsMatchEan) {
-                    const newMin = ItemsMatchEan.filter((element) => {
-                        return element.Item.priceForOne !== -1
-                    })
-                    if (!newMin || newMin.length === 0) {
-                        return;
-                    }
+        try {
+            getMultipleHurtResult(prodToSearch).then(data => {
+                const newOptItems: IItemInstance[] = []
+                const newAllResult: IAllResult[] = []
+                prodToSearch.map((item) => {
+                    const ItemsMatchEan = data.get(item.Ean)
+                    if (ItemsMatchEan) {
+                        const newMin = ItemsMatchEan.filter((element) => {
+                            return element.Item.priceForOne !== -1
+                        })
+                        if (!newMin || newMin.length === 0) {
+                            return;
+                        }
 
-                    const xd = newMin.reduce((prev, current) => {
-                        return prev.Item.priceForOne < current.Item.priceForOne ? prev : current
-                    })
-                    newOptItems.push({
-                        name: item.Name,
-                        ean: item.Ean,
-                        item: xd.Item,
-                        count: item.Amount,
-                    })
-                    newAllResult.push({
-                        ean: item.Ean,
-                        result: ItemsMatchEan
-                    })
-                } else {
-                    newOptItems.push({
-                        name: item.Name,
-                        ean: item.Ean,
-                        item: {
-                            hurtName: hurtNames.none,
-                            priceForPack: -1,
-                            priceForOne: -1,
-                            productsInPack: -1,
-                        },
-                        count: item.Amount,
-                    })
-                }
+                        const xd = newMin.reduce((prev, current) => {
+                            return prev.Item.priceForOne < current.Item.priceForOne ? prev : current
+                        })
+                        newOptItems.push({
+                            name: item.Name,
+                            ean: item.Ean,
+                            item: xd.Item,
+                            count: item.Amount,
+                        })
+                        newAllResult.push({
+                            ean: item.Ean,
+                            result: ItemsMatchEan
+                        })
+                    } else {
+                        newOptItems.push({
+                            name: item.Name,
+                            ean: item.Ean,
+                            item: {
+                                hurtName: hurtNames.none,
+                                priceForPack: -1,
+                                priceForOne: -1,
+                                productsInPack: -1,
+                            },
+                            count: item.Amount,
+                        })
+                    }
+                })
+                setOptItems(newOptItems)
+                setAllResult(newAllResult)
+                setIsLoadingProduct(false)
             })
-            setOptItems(newOptItems)
-            setAllResult(newAllResult)
+        } catch (e: any){
+            setErrorMessage(e.message)
             setIsLoadingProduct(false)
-        })
+        }
         // zapisanie ich w optItems
     }, [prodToSearch])
 
@@ -187,41 +192,46 @@ export default function MainSite() {
                        onChange={e => setEan(e.target.value)} onKeyDown={e => {
                 if (e.key === "Enter") {
                     setIsLoadingProduct(true)
-                    getHurtResult(Ean).then(data => {
-                        const newMap = new Map<hurtNames, ReactNode>()
-                        let i = 0
-                        data.map((item) => {
-                            if (item.priceForOne !== -1) {
-                                i+=1
-                                newMap.set(item.hurtName, (
+                    try {
+                        getHurtResult(Ean).then(data => {
+                            const newMap = new Map<hurtNames, ReactNode>()
+                            let i = 0
+                            data.map((item) => {
+                                if (item.priceForOne !== -1) {
+                                    i += 1
+                                    newMap.set(item.hurtName, (
+                                        <HurtResultForm
+                                            name={hurtNames[item.hurtName]}
+                                            priceForPack={item.priceForPack}
+                                            princeForOne={item.priceForOne}
+                                            productsInPack={item.productsInPack}
+                                        />
+                                    ))
+                                }
+                            })
+                            if (i === 0) {
+                                newMap.set(hurtNames.none, (
                                     <HurtResultForm
-                                        name={hurtNames[item.hurtName]}
-                                        priceForPack={item.priceForPack}
-                                        princeForOne={item.priceForOne}
-                                        productsInPack={item.productsInPack}
+                                        name={hurtNames[hurtNames.none]}
+                                        priceForPack={-1}
+                                        princeForOne={-1}
+                                        productsInPack={-1}
                                     />
                                 ))
+                            } else {
+                                setComponentHashTable(newMap)
                             }
-                        })
-                        if (i === 0) {
-                            newMap.set(hurtNames.none, (
-                                <HurtResultForm
-                                    name={hurtNames[hurtNames.none]}
-                                    priceForPack={-1}
-                                    princeForOne={-1}
-                                    productsInPack={-1}
-                                />
-                            ))
-                        }else{
-                            setComponentHashTable(newMap)
-                        }
 
-                        setLowerHurt(Math.max(...data.map(item => item.priceForOne)) === -1 ?
-                            hurtNames.none : data.find(item => item.priceForOne === Math.max(...data.map(item => item.priceForOne)))?.hurtName || hurtNames.none)
+                            setLowerHurt(Math.max(...data.map(item => item.priceForOne)) === -1 ?
+                                hurtNames.none : data.find(item => item.priceForOne === Math.max(...data.map(item => item.priceForOne)))?.hurtName || hurtNames.none)
+                            setIsLoadingProduct(false)
+                        });
+                    }catch (e: any){
+                        setErrorMessage(e.message)
                         setIsLoadingProduct(false)
-                    });
-                }
-            }}/>
+                    }
+                }}}
+            />
 
             <p></p>
             {hurtNames[lowerHurt]}

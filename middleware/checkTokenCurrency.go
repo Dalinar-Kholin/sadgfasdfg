@@ -36,7 +36,11 @@ func CheckTokenCurrency(c *gin.Context) {
 				if !hurt.RefreshToken(userInstance.Client) {
 					fmt.Printf("refresh tokena hurt := %v\n", hurt.GetName())
 					userCred := userInstance.TakeHurtCreds(hurt.GetName())
-					hurt.TakeToken(userCred.Login, userCred.Password, userInstance.Client)
+					if !hurt.TakeToken(userCred.Login, userCred.Password, userInstance.Client) {
+						c.JSON(400, gin.H{
+							"error": "nie udało się zalogować do hurtowni",
+						})
+					}
 				}
 			}
 		}(&wg, hurt)

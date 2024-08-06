@@ -5,7 +5,7 @@ import round from "./handleSot.ts";
 export function handleEurocash(){
     return (serverResponse: any) : IHurtInfoForComp => {
 
-        if (serverResponse.Data.TotalCount ===0){
+        if (serverResponse === null ||  serverResponse.Data.TotalCount ===0){
             return {
                 hurtName: hurtNames.eurocash,
                 priceForPack: -1,
