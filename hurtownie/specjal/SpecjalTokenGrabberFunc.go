@@ -13,12 +13,12 @@ import (
 func firstRequest() ([]*http.Cookie, string, string, string) {
 	res, err := http.Get("https://specjal.ehurtownia.pl/")
 	if err != nil {
-		panic(err)
+		return nil, "", "", ""
 	}
 	cookies := res.Cookies()
 	tempBody, err := io.ReadAll(res.Body)
 	if err != nil {
-		panic(err)
+		return nil, "", "", ""
 	}
 	body := string(tempBody)
 	index := strings.Index(body, " action=\"")
@@ -49,7 +49,7 @@ func secondRequest(client *http.Client, cookies []*http.Cookie, sessionCode, exe
 			"&tab_id="+tabId,
 		bytes.NewBuffer([]byte(body))) // powinniśmy dodać redirecta i to jest w chuj ważne
 	if err != nil {
-		panic(err)
+		return nil
 	}
 
 	req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
@@ -69,12 +69,9 @@ func secondRequest(client *http.Client, cookies []*http.Cookie, sessionCode, exe
 		req.AddCookie(cookie)
 	}
 	resp, err := client.Do(req)
-	if resp.StatusCode != 302 {
-		panic("Nie udało się zalogować")
+	if err != nil || resp.StatusCode != 302 {
+		return nil
 
-	}
-	if err != nil {
-		panic(err)
 	}
 	responseCookies := resp.Cookies()
 
@@ -92,7 +89,7 @@ func thirdRequest(client *http.Client, cookies []*http.Cookie) ([]*http.Cookie, 
 		"&response_type=code"+
 		"&scope=openid", nil)
 	if err != nil {
-		panic(err)
+		return nil, ""
 	}
 	req.Header.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
 	req.Header.Add("Accept-Encoding", "gzip, deflate, br")
@@ -111,7 +108,7 @@ func thirdRequest(client *http.Client, cookies []*http.Cookie) ([]*http.Cookie, 
 
 	response, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return nil, ""
 	}
 	responseCookies := response.Cookies()
 
@@ -130,7 +127,7 @@ func tokenRequest(client *http.Client, cookies []*http.Cookie, code string) hurt
 		"&grant_type=authorization_code&client_id=ehurtownia-panel-frontend&redirect_uri=https%3A%2F%2Fnowaspecjal.ehurtownia.pl%2F"
 	req, err := http.NewRequest("POST", "https://sso.infinite.pl/auth/realms/InfiniteEH/protocol/openid-connect/token", bytes.NewBuffer([]byte(requestBody)))
 	if err != nil {
-		panic(err)
+		return hurtownie.SotAndSpecjalTokenResponse{}
 	}
 	req.Header.Set("Host", "sso.infinite.pl")
 	req.Header.Set("Accept", "*/*")
@@ -149,13 +146,13 @@ func tokenRequest(client *http.Client, cookies []*http.Cookie, code string) hurt
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return hurtownie.SotAndSpecjalTokenResponse{}
 	}
 	var specjalTokenResponse hurtownie.SotAndSpecjalTokenResponse
 	responseReaderJson := json.NewDecoder(resp.Body)
 	err = responseReaderJson.Decode(&specjalTokenResponse)
 	if err != nil {
-		panic("błąd przy parsowaniu response od sot\nerror := " + err.Error())
+		return hurtownie.SotAndSpecjalTokenResponse{}
 	}
 
 	return specjalTokenResponse

@@ -36,6 +36,7 @@ func (t *Tedi) CheckToken(client *http.Client) bool {
 }
 
 func (t *Tedi) RefreshToken(client *http.Client) bool {
+	return true
 	body := struct {
 		RefreshToken string `json:"refresh_token"`
 	}{
@@ -70,8 +71,6 @@ func (t *Tedi) RefreshToken(client *http.Client) bool {
 	responseReader := json.NewDecoder(resp.Body)
 	err = responseReader.Decode(&sotToken)
 	if err != nil {
-		bdy, _ := io.ReadAll(resp.Body)
-		panic("błąd przy parsowaniu response od tedi\nerror := " + err.Error() + "\n" + string(bdy))
 		return false
 	}
 	t.Token = sotToken
@@ -96,11 +95,11 @@ func (t *Tedi) TakeToken(login, password string, client *http.Client) bool {
 		return false
 	}
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonBody))
-	req.Header.Set("Content-Type", "application/json")
-
 	if err != nil {
 		return false
 	}
+	req.Header.Set("Content-Type", "application/json")
+
 	resp, err := client.Do(req)
 	if err != nil || resp.StatusCode != 200 {
 		return false

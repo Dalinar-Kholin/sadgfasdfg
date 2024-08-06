@@ -81,15 +81,11 @@ func (s *Specjal) RefreshToken(client *http.Client) bool {
 		fmt.Printf("\nfatal error := %v\n", err)
 		return false
 	}
-	if err != nil {
-		panic("Błąd przy wykonaniu requesta 3, coś się mocno zjebało\nerror := " + err.Error())
-	}
 
 	var sotToken hurtownie.SotAndSpecjalTokenResponse
 	responseReader := json.NewDecoder(resp.Body)
 	err = responseReader.Decode(&sotToken)
 	if err != nil {
-		panic("błąd przy parsowaniu response od sot\nerror := " + err.Error())
 		return false
 	}
 	s.Token = sotToken
@@ -106,21 +102,31 @@ func (s *Specjal) GetName() hurtownie.HurtName {
 // ICOM: do zaimplementowania tego potrzebujemy około 5 requestów, będzie brzydko, ale będzie dziłać, w przeciwieństwie do SOTu nie możemy wygenerwoać sobie swoich nonców i statów, tylko musimy je pobrać z servera
 func (s *Specjal) TakeToken(login, password string, client *http.Client) bool {
 	firstRequestCookies, sessionCode, execiution, tabId := firstRequest()
+
+	if sessionCode == "" || execiution == "" || tabId == "" || firstRequestCookies == nil {
+		return false
+	}
+
 	var AuthCookie *http.Cookie
 	for _, i2 := range firstRequestCookies {
 		if i2.Name == "AUTH_SESSION_ID" {
 			AuthCookie = i2
 		}
 	}
-	secondRequestCCookies := secondRequest(client, firstRequestCookies, sessionCode, execiution, tabId, login, password)
+	secondRequestCookies := secondRequest(client, firstRequestCookies, sessionCode, execiution, tabId, login, password)
+	if secondRequestCookies == nil {
+		return false
+	}
 
-	_ = secondRequestCCookies
 	accomodatedCookies := make([]*http.Cookie, 0)
 	accomodatedCookies = append(accomodatedCookies, firstRequestCookies...)
-	accomodatedCookies = append(accomodatedCookies, secondRequestCCookies...)
+	accomodatedCookies = append(accomodatedCookies, secondRequestCookies...)
 
-	thirdrResponseCookies, code := thirdRequest(client, accomodatedCookies)
-	cookiesForTokenRequest := append(thirdrResponseCookies, AuthCookie)
+	thirdResponseCookies, code := thirdRequest(client, accomodatedCookies)
+	if thirdResponseCookies == nil {
+		return false
+	}
+	cookiesForTokenRequest := append(thirdResponseCookies, AuthCookie)
 	s.Token = tokenRequest(client, cookiesForTokenRequest, code)
 	return true
 }
@@ -156,7 +162,7 @@ func (s *Specjal) SearchProduct(Ean string, client *http.Client) (interface{}, e
 
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -255,12 +261,12 @@ func (s *Specjal) AddToCart(list hurtownie.WishList, client *http.Client) bool {
 	setHeader(req)
 
 	resp, err = client.Do(req)
-	var productRes []ProductResponse
-	responseReader = json.NewDecoder(resp.Body)
-	err = responseReader.Decode(&productRes)
 	if err != nil {
 		return false
 	}
+	var productRes []ProductResponse
+	responseReader = json.NewDecoder(resp.Body)
+	err = responseReader.Decode(&productRes)
 	/*ICOM : WAŻNE W CHUJ, ZKAŁAKDAM ŻE KOLEJNOŚĆ PRODUKTÓW JEST TAKA JAK NA LIŚCIE
 	mogę więc iterować po liście i odnościć się do ilości produktów*/
 

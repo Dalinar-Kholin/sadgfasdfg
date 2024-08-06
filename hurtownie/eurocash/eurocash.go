@@ -19,10 +19,11 @@ type EurocashObject struct {
 func (e *EurocashObject) CheckToken(client *http.Client) bool {
 	url := "https://ehurtapi.eurocash.pl/api/offer/getExtraBanner?placement=4"
 	req, err := http.NewRequest("GET", url, nil)
-	req.Header.Set("Authorization", "Bearer "+e.Token)
 	if err != nil {
 		return false
+
 	}
+	req.Header.Set("Authorization", "Bearer "+e.Token)
 	makeRequest(req)
 	resp, err := client.Do(req)
 	if err != nil {
@@ -80,7 +81,14 @@ func (e *EurocashObject) TakeToken(login, password string, client *http.Client) 
 
 	csrf, location, veryfyer, CsrfCookie := takeLoginSiteAndCSRF(client)
 
+	if csrf == "" || location == "" || veryfyer == "" || CsrfCookie == nil {
+		return false
+	}
+
 	location, cookies := sendCredentials(client, csrf, location, login, password, CsrfCookie)
+	if location == "" || cookies == nil {
+		return false
+	}
 	cookies = append(cookies, CsrfCookie)
 	code := takeCode(client, cookies, location)
 	if code == "" {
@@ -123,7 +131,7 @@ func (e *EurocashObject) SearchProduct(Ean string, client *http.Client) (interfa
 	req.Header.Set("Authorization", "Bearer "+e.Token)
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return nil, errors.New("Błąd przy wykonaniu żądania")
 	}
 	var itemData EurocashResponse
 	jsonReader := json.NewDecoder(resp.Body)

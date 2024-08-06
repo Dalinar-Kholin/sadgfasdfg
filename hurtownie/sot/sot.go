@@ -98,15 +98,11 @@ func (s *Sot) RefreshTokenFunc(client *http.Client) bool {
 		fmt.Printf("\nfatal error := %v\n", err)
 		return false
 	}
-	if err != nil {
-		panic("Błąd przy wykonaniu requesta 3, coś się mocno zjebało\nerror := " + err.Error())
-	}
 
 	var sotToken hurtownie.SotAndSpecjalTokenResponse
 	responseReader := json.NewDecoder(resp.Body)
 	err = responseReader.Decode(&sotToken)
 	if err != nil {
-		panic("błąd przy parsowaniu response od sot\nerror := " + err.Error())
 		return false
 	}
 	s.Token = sotToken
@@ -119,19 +115,20 @@ efektem ubocznym funckji jest ustawienie parametrów Token, RefreshToken, Sessio
 func (s *Sot) TakeToken(login, password string, client *http.Client) bool {
 
 	AuthSessionIDCookie, firstRequestCookie, sessionCode, tabId := firstRequestForToken(client)
-	if tabId == "" {
+	if tabId == "" || AuthSessionIDCookie == nil || firstRequestCookie == nil {
 		return false
 	}
 
 	secondRequestCookies, code := secondRequestForToken(client, firstRequestCookie, sessionCode, tabId, login, password)
 
-	if code == "" {
+	if code == "" || secondRequestCookies == nil {
 		return false
 	}
 
 	s.Cookies = append(secondRequestCookies, AuthSessionIDCookie)
 
 	token := thirdRequestForToken(code, client, secondRequestCookies, AuthSessionIDCookie)
+
 	s.Token = token
 	if token.AccessToken == "" {
 		return false
@@ -269,12 +266,12 @@ func (s *Sot) AddToCart(list hurtownie.WishList, client *http.Client) bool {
 	setHeader(req)
 
 	resp, err = client.Do(req)
-	var productRes []ProductResponse
-	responseReader = json.NewDecoder(resp.Body)
-	err = responseReader.Decode(&productRes)
 	if err != nil {
 		return false
 	}
+	var productRes []ProductResponse
+	responseReader = json.NewDecoder(resp.Body)
+	err = responseReader.Decode(&productRes)
 	/*ICOM : WAŻNE W CHUJ, ZKAŁAKDAM ŻE KOLEJNOŚĆ PRODUKTÓW JEST TAKA JAK NA LIŚCIE
 	mogę więc iterować po liście i odnościć się do ilości produktów*/
 

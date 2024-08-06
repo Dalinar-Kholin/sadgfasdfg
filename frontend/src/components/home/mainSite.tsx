@@ -189,11 +189,12 @@ export default function MainSite() {
                     setIsLoadingProduct(true)
                     getHurtResult(Ean).then(data => {
                         const newMap = new Map<hurtNames, ReactNode>()
+                        let i = 0
                         data.map((item) => {
                             if (item.priceForOne !== -1) {
+                                i+=1
                                 newMap.set(item.hurtName, (
                                     <HurtResultForm
-
                                         name={hurtNames[item.hurtName]}
                                         priceForPack={item.priceForPack}
                                         princeForOne={item.priceForOne}
@@ -202,8 +203,18 @@ export default function MainSite() {
                                 ))
                             }
                         })
-
-                        setComponentHashTable(newMap)
+                        if (i === 0) {
+                            newMap.set(hurtNames.none, (
+                                <HurtResultForm
+                                    name={hurtNames[hurtNames.none]}
+                                    priceForPack={-1}
+                                    princeForOne={-1}
+                                    productsInPack={-1}
+                                />
+                            ))
+                        }else{
+                            setComponentHashTable(newMap)
+                        }
 
                         setLowerHurt(Math.max(...data.map(item => item.priceForOne)) === -1 ?
                             hurtNames.none : data.find(item => item.priceForOne === Math.max(...data.map(item => item.priceForOne)))?.hurtName || hurtNames.none)

@@ -138,7 +138,8 @@ func main() {
 	}
 
 	//r.Run(":8080")
-	r.Run("0.0.0.0:" + os.Getenv("PORT"))
+	//r.Run("0.0.0.0:" + os.Getenv("PORT"))
+	r.RunTLS("0.0.0.0:"+os.Getenv("PORT"), "./cert.crt", "./key.key")
 	return
 }
 

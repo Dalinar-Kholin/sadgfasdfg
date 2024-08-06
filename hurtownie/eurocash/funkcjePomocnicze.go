@@ -2,7 +2,6 @@ package eurocash
 
 import (
 	"bytes"
-	"compress/gzip"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
@@ -16,7 +15,7 @@ import (
 func takeLoginSiteAndCSRF(client *http.Client) (csrf, location, verifyer string, responseCookie *http.Cookie) {
 	state, err := generateNonce(60)
 	if err != nil {
-		panic(err)
+		return
 	}
 	verifyer, _ = generateNonce(60)
 	challenge := generateCodeChallenge(verifyer)
@@ -56,19 +55,21 @@ func takeLoginSiteAndCSRF(client *http.Client) (csrf, location, verifyer string,
 	// Handle response here as needed
 	location = resp.Header.Get("Location")
 
+	if location == "" {
+		return "", "", "", nil
+	}
 	req, err = http.NewRequest("GET", location, nil)
 	if err != nil {
-		panic(err)
+		return "", "", "", nil
 	}
 	addHeadersToRequest(req)
 	resp, err = client.Do(req)
-
+	if err != nil {
+		return
+	}
 	body, _ := io.ReadAll(resp.Body)
 	index := strings.Index(string(body), "Cf")
 	csrf = string(body[index : index+155])
-	if err != nil {
-		panic(err)
-	}
 	responseCookie = resp.Cookies()[0]
 
 	return
@@ -84,7 +85,7 @@ func sendCredentials(client *http.Client, scrf, location, login, password string
 		"&CSRF-TOKEN=" + scrf
 	req, err := http.NewRequest("POST", location, bytes.NewBuffer([]byte(jsonStr)))
 	if err != nil {
-		panic(err)
+		return
 	}
 
 	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0")
@@ -106,7 +107,7 @@ func sendCredentials(client *http.Client, scrf, location, login, password string
 	req.AddCookie(cookies)
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return
 	}
 	resCookies = resp.Cookies()
 	resLocation = resp.Header.Get("Location")
@@ -117,7 +118,7 @@ func sendCredentials(client *http.Client, scrf, location, login, password string
 func takeCode(client *http.Client, cookies []*http.Cookie, location string) (code string) {
 	req, err := http.NewRequest("GET", "https://logowanie.eurocash.pl"+location, nil)
 	if err != nil {
-		panic(err)
+		return
 	}
 	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0")
 	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
@@ -135,7 +136,7 @@ func takeCode(client *http.Client, cookies []*http.Cookie, location string) (cod
 
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return
 	}
 	defer resp.Body.Close()
 	newLocation := resp.Header.Get("Location")
@@ -155,7 +156,7 @@ func takeTokeRequest(client *http.Client, code, veryfyer string) (accessToken st
 		"&client_id=EplOnline&alt="
 	req, err := http.NewRequest("POST", "https://logowanie.eurocash.pl/connect/token", bytes.NewBuffer([]byte(jsonStr)))
 	if err != nil {
-		panic(err)
+		return
 	}
 	req.Header.Set("User-Agent", "Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/115.0")
 	req.Header.Set("Accept", "application/json")
@@ -171,7 +172,7 @@ func takeTokeRequest(client *http.Client, code, veryfyer string) (accessToken st
 
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		return
 	}
 	defer resp.Body.Close()
 	bodyByte, _ := io.ReadAll(resp.Body)
@@ -222,19 +223,4 @@ func makeRequest(req *http.Request) {
 	req.Header.Set("Sec-Ch-Ua-Mobile", "?0")
 	req.Header.Set("Sec-Ch-Ua-Platform", `"Linux"`)
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.60 Safari/537.36")
-}
-
-func decodeGzip(data []byte) ([]byte, error) {
-	reader, err := gzip.NewReader(bytes.NewReader(data))
-	if err != nil {
-		return nil, err
-	}
-	defer reader.Close()
-
-	var uncompressedData bytes.Buffer
-	_, err = io.Copy(&uncompressedData, reader)
-	if err != nil {
-		return nil, err
-	}
-	return uncompressedData.Bytes(), nil
 }

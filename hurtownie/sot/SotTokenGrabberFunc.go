@@ -26,7 +26,7 @@ func firstRequestForToken(client *http.Client) (authCookies *http.Cookie, firstR
 
 	if err != nil {
 		fmt.Printf("Błąd przy tworzeniu żądania: %v", err)
-		panic("Błąd przy tworzeniu żądania do sotu, coś się mocno zjebało")
+		return
 	}
 
 	req.Header.Set("Host", "sso.infinite.pl")
@@ -46,7 +46,7 @@ func firstRequestForToken(client *http.Client) (authCookies *http.Cookie, firstR
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Printf("Błąd wykonania żądania do Sot: %v", err)
-		panic("Błąd przy wykonaniu żądania do sotu, coś się mocno zjebało")
+		return
 	}
 	firstRequestCookie = resp.Cookies()
 	responseBody, err := io.ReadAll(resp.Body)
@@ -131,7 +131,7 @@ func thirdRequestForToken(code string, client *http.Client, secondRequestCookies
 
 	req, err := http.NewRequest("POST", "https://sso.infinite.pl/auth/realms/InfiniteEH/protocol/openid-connect/token", bytes.NewBuffer([]byte(body)))
 	if err != nil {
-		panic("Błąd przy tworzeniu requesta 3, coś się mocno zjebało\nerror := " + err.Error())
+		return hurtownie.SotAndSpecjalTokenResponse{}
 	}
 
 	req.Header.Set("Host", "sso.infinite.pl")
@@ -155,14 +155,14 @@ func thirdRequestForToken(code string, client *http.Client, secondRequestCookies
 	resp, err := client.Do(req)
 
 	if err != nil {
-		panic("Błąd przy wykonaniu requesta 3, coś się mocno zjebało\nerror := " + err.Error())
+		return hurtownie.SotAndSpecjalTokenResponse{}
 	}
 
 	var sotToken hurtownie.SotAndSpecjalTokenResponse
 	responseReaderJson := json.NewDecoder(resp.Body)
 	err = responseReaderJson.Decode(&sotToken)
 	if err != nil {
-		panic("błąd przy parsowaniu response od sot\nerror := " + err.Error())
+		return hurtownie.SotAndSpecjalTokenResponse{}
 	}
 
 	return sotToken

@@ -22,21 +22,21 @@ type LoginBodyData struct {
 	Password string `json:"password"`
 }
 
-func MakeNewUser(dbUser user.DataBaseUserObject) (userInstance *user.User) {
+func MakeNewUser(dbUser user.DataBaseUserObject) (userInstance *user.User, isLogged bool) {
 	var hurtTab []hurtownie.IHurt
 
 	var wg sync.WaitGroup
 
-	/*proxyURL, err := url.Parse("http://127.0.0.1:8000")
-	if err != nil {
-		fmt.Println("Error parsing proxy URL:", err)
-		return
-	}*/
+	/*	proxyURL, err := url.Parse("http://127.0.0.1:8000")
+		if err != nil {
+			fmt.Println("Error parsing proxy URL:", err)
+			return nil, false
+		}
 
-	// Step 2: Create a transport that uses the proxy
-	/*transport := &http.Transport{
-		Proxy: http.ProxyURL(proxyURL),
-	}*/
+		// Step 2: Create a transport that uses the proxy
+		transport := &http.Transport{
+			Proxy: http.ProxyURL(proxyURL),
+		}*/
 
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -45,21 +45,29 @@ func MakeNewUser(dbUser user.DataBaseUserObject) (userInstance *user.User) {
 		//Transport: transport,
 	}
 
+	ch := make(chan bool)
+
 	for _, creds := range dbUser.Creds { // do poprawy nie działa gdy użytkownik ma różną liczbę credsów względem hurtowni
 		fmt.Printf("creds := %v\n", creds)
 		instance, _ := factory.HurtFactory(creds.HurtName)
 		hurtTab = append(hurtTab, instance)
 		wg.Add(1)
-		go func(hurt *hurtownie.IHurt, wg *sync.WaitGroup) {
+		go func(hurt *hurtownie.IHurt, wg *sync.WaitGroup, ch chan<- bool) {
 			defer wg.Done()
-			(*hurt).TakeToken(creds.Login, creds.Password, client)
-		}(&instance, &wg)
+			ch <- (*hurt).TakeToken(creds.Login, creds.Password, client)
+		}(&instance, &wg, ch)
 	}
 
 	go func() {
 		wg.Wait()
 	}()
 
+	for x := range ch {
+		if !x {
+			return nil, false
+		}
+	}
+	isLogged = true
 	userInstance = &user.User{Client: client, Hurts: hurtTab, Creds: dbUser.Creds}
 	fmt.Printf("userInstance := %v\n", userInstance)
 	return
@@ -70,14 +78,14 @@ func (a AccountEndpoint) Login(c *gin.Context) {
 
 	request, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		println("poggerus")
-		panic(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "cant read body"})
+		return
 	}
 	defer c.Request.Body.Close()
 	var reqBody LoginBodyData
 	err = json.Unmarshal(request, &reqBody)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "bad request"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "bad json"})
 		return
 	}
 	var dataBaseResponse user.DataBaseUserObject
@@ -91,11 +99,15 @@ func (a AccountEndpoint) Login(c *gin.Context) {
 		return
 	}
 	fmt.Printf("dataBaseResponse := %v\n", dataBaseResponse)
-	userInstance := MakeNewUser(dataBaseResponse)
-
+	userInstance, isLogged := MakeNewUser(dataBaseResponse)
+	if !isLogged {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "cant logged to selected Hurts"})
+		return
+	}
 	newToken := make([]byte, 64)
 	if _, err := rand.Read(newToken); err != nil {
-		panic(err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "cant generate token"})
+		return
 	}
 	resToken := sha3.Sum256(newToken)
 	shildedToken := hex.EncodeToString(resToken[:])

@@ -20,10 +20,6 @@ func (u *User) TakeHurtCreds(name hurtownie.HurtName) UserCreds {
 	return UserCreds{}
 }
 
-func NewUser(client *http.Client) *User {
-	return &User{Client: client}
-}
-
 type DataBaseUserObject struct {
 	Email          string      `bson:"email" json:"email"`
 	Username       string      `bson:"username" json:"username"`
