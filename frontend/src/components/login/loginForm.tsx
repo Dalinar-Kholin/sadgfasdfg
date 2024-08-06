@@ -1,7 +1,7 @@
 import {useState} from "react";
 import {Alert, AlertTitle, Button, TextField} from "@mui/material";
 import "./login.css"
-//import {useNavigate} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 
 function getCookie(name: string) {
     let cookieArr = document.cookie.split(";");
@@ -28,7 +28,7 @@ export default function LoginForm(){
     const [isProperData, setIsProperData] = useState<boolean>(true)
     const [errorMessage, setErrorMessage] = useState<string>("")
 
-    //const navigate = useNavigate()
+    const navigate = useNavigate()
 
     return (
         <>
@@ -62,7 +62,7 @@ export default function LoginForm(){
                     setPassword("")
                     // dodać ciasteczka
                     // przenieść na stronę główną
-                    // navigate("/main")
+                    navigate("/main")
                     console.log(data)
                 }).catch(error => {
                     console.error('There has been a problem with your fetch operation:', error);

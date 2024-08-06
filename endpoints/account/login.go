@@ -57,9 +57,9 @@ func MakeNewUser(dbUser user.DataBaseUserObject) (userInstance *user.User, isLog
 			ch <- (*hurt).TakeToken(creds.Login, creds.Password, client)
 		}(&instance, &wg, ch)
 	}
-
 	go func() {
 		wg.Wait()
+		close(ch)
 	}()
 
 	for x := range ch {
