@@ -12,11 +12,12 @@ import (
 	"optimaHurt/endpoints/orders"
 	"optimaHurt/endpoints/takePrices"
 	"optimaHurt/middleware"
+	"os"
 )
 
 func connectToDB() *mongo.Client {
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
-	opts := options.Client().ApplyURI("mongodb+srv://pojebiemnie:pojebiemnie@simpledb.swlqbjl.mongodb.net/?retryWrites=true&w=majority&appName=simpleDB").SetServerAPIOptions(serverAPI)
+	opts := options.Client().ApplyURI(os.Getenv("CONNECTION_STRING")).SetServerAPIOptions(serverAPI)
 	// Create a new client and connect to the server
 	client, err := mongo.Connect(constAndVars.ContextBackground, opts)
 	if err != nil {
@@ -97,8 +98,8 @@ func main() {
 	}
 
 	//r.Run(":8080")
-	//r.Run("0.0.0.0:" + "443")
-	r.RunTLS("0.0.0.0:"+"443", "./cert.crt", "./key.key")
+	r.Run("0.0.0.0:" + os.Getenv("PORT"))
+	//r.RunTLS("0.0.0.0:"+"443", "./cert.crt", "./key.key")
 	return
 }
 
