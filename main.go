@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -35,50 +34,11 @@ func connectToDB() *mongo.Client {
 
 // potem automatycznie dołączam usera do requesta
 func main() {
-	/*
-		proxyURL, _ := url.Parse("http://127.0.0.1:8000")
-		client := &http.Client{
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				return http.ErrUseLastResponse
-			},
-			Transport: &http.Transport{
-				Proxy: http.ProxyURL(proxyURL),
-			},
-		}
-		tediInterface, err := factory.HurtFactory(hurtownie.Specjal)
-		if err != nil {
-			panic(err)
-		}
-		tediInstance := tediInterface.(*specjal.Specjal)
-		tediInstance.TakeToken("21B879.GAJWILKSZ", "YN38544P", client)
-		res := tediInstance.AddToCart(hurtownie.WishList{
-			Items: []hurtownie.Items{
-				{"5900049003503", 8, hurtownie.Sot},
-				{"5900783004736", 4, hurtownie.Sot},
-				{"5901064771217", 3, hurtownie.Sot},
-				{"5900571100855", 3, hurtownie.Sot},
-				{"8711200405862", 12, hurtownie.Sot},
-			},
-		}, client)
-		fmt.Printf("res := %v\nerr := %v\n", res, err)
-
-		return*/
-
-	err := godotenv.Load(".env")
-	if err != nil {
-		println(err.Error())
-		return
-	} // loading .env to let us read it
 
 	connection := connectToDB()
 	defer func() {
 		connection.Disconnect(constAndVars.ContextBackground)
 	}()
-	/*testSpecjal(&http.Client{
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return http.ErrUseLastResponse
-		},
-	})*/
 
 	r := gin.Default()
 	r.Use(middleware.AddHeaders)
@@ -138,8 +98,8 @@ func main() {
 	}
 
 	//r.Run(":8080")
-	//r.Run("0.0.0.0:" + os.Getenv("PORT"))
-	r.RunTLS("0.0.0.0:"+os.Getenv("PORT"), "./cert.crt", "./key.key")
+	r.Run("0.0.0.0:" + os.Getenv("PORT"))
+	//r.RunTLS("0.0.0.0:"+os.Getenv("PORT"), "./cert.crt", "./key.key")
 	return
 }
 
