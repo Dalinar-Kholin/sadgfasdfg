@@ -113,7 +113,7 @@ func (a AccountEndpoint) Login(c *gin.Context) {
 	shildedToken := hex.EncodeToString(resToken[:])
 	//shieldedToken := base64.StdEncoding.EncodeToString(newToken) // token jest użytkowany tylko podczas sesji, więc nie ma potrzeby przechowywania go w bazie danych
 	Users[shildedToken] = *userInstance
-	c.SetCookie("accessToken", shildedToken, 0, "/", "127.0.0.1", true, false) // httpOnly musi być false, aby js mógł odczytać ciasteczko i dołączyć je do kończenia sesji
+	c.SetCookie("accessToken", shildedToken, 0, "/", "/", true, false) // httpOnly musi być false, aby js mógł odczytać ciasteczko i dołączyć je do kończenia sesji
 	c.JSON(200, gin.H{"result": "success"})
 }
 

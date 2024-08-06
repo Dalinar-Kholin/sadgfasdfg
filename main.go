@@ -18,7 +18,7 @@ import (
 func connectToDB() *mongo.Client {
 	serverAPI := options.ServerAPI(options.ServerAPIVersion1)
 	opts := options.Client().ApplyURI(os.Getenv("CONNECTION_STRING")).SetServerAPIOptions(serverAPI)
-	// Create a new client and connect to the server
+	// Create a new client and connect to the serer
 	client, err := mongo.Connect(constAndVars.ContextBackground, opts)
 	if err != nil {
 		panic(err)
