@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/textproto"
 	"optimaHurt/hurtownie"
+	"strconv"
 	"sync"
 )
 
@@ -132,9 +133,10 @@ func (e *EurocashObject) SearchProduct(Ean string, client *http.Client) (interfa
 	fmt.Printf("req := %v\n", req)
 	makeRequest(req)
 	req.Header.Set("Authorization", "Bearer "+e.Token)
+	req.Header.Set("Content-Length", strconv.Itoa(len(jsonData)))
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Błąd przy wykonaniu żądania:", err)
+		fmt.Println("Błąd przy wykonaniu żądania pogger:", err)
 		return nil, errors.New("Błąd przy wykonaniu żądania")
 	}
 	var itemData EurocashResponse
