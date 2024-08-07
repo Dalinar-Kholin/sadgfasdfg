@@ -56,6 +56,7 @@ func (e *EurocashObject) SearchMany(list hurtownie.WishList, client *http.Client
 					Item: -1,
 					Ean:  ean,
 				}
+				return
 			}
 			ch <- hurtownie.SearchManyProducts{
 				Item: res,
@@ -84,18 +85,21 @@ func (e *EurocashObject) TakeToken(login, password string, client *http.Client) 
 	if csrf == "" || location == "" || veryfyer == "" || CsrfCookie == nil {
 		return false
 	}
-
+	fmt.Printf("csrf := %v\nlocation := %v\nveryfyer := %v\nCsrfCookie := %v\n", csrf, location, veryfyer, CsrfCookie)
 	location, cookies := sendCredentials(client, csrf, location, login, password, CsrfCookie)
 	if location == "" || cookies == nil {
 		return false
 	}
+	fmt.Printf("location := %v\ncookies := %v\n", location, cookies)
 	cookies = append(cookies, CsrfCookie)
 	code := takeCode(client, cookies, location)
 	if code == "" {
 		return false
 	}
+	fmt.Printf("code := %v\n", code)
 	accessToken := takeTokeRequest(client, code, veryfyer)
 	e.Token = accessToken
+	fmt.Printf("accessToken := %v\n", accessToken)
 	return true
 }
 
