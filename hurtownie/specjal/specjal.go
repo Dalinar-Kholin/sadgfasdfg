@@ -189,7 +189,7 @@ func (s *Specjal) SearchMany(list hurtownie.WishList, client *http.Client) ([]hu
 			defer wg.Done()
 			res, err := s.SearchProduct(i.Ean, client)
 			if err != nil {
-				ch <- hurtownie.SearchManyProducts{Item: -1, Ean: ean}
+				ch <- hurtownie.SearchManyProducts{Item: nil, Ean: ean}
 				return
 			}
 			ch <- hurtownie.SearchManyProducts{Item: res, Ean: ean}

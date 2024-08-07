@@ -149,9 +149,10 @@ func (t *Tedi) SearchMany(list hurtownie.WishList, client *http.Client) ([]hurto
 			res, err := t.SearchProduct(i.Ean, client)
 			if err != nil {
 				ch <- hurtownie.SearchManyProducts{
-					Item: -1,
+					Item: nil,
 					Ean:  ean,
 				}
+				return
 			}
 			ch <- hurtownie.SearchManyProducts{
 				Item: res,

@@ -54,7 +54,7 @@ func (e *EurocashObject) SearchMany(list hurtownie.WishList, client *http.Client
 			res, err := e.SearchProduct(i.Ean, client)
 			if err != nil {
 				ch <- hurtownie.SearchManyProducts{
-					Item: -1,
+					Item: nil,
 					Ean:  ean,
 				}
 				return
@@ -124,7 +124,6 @@ func (e *EurocashObject) SearchProduct(Ean string, client *http.Client) (interfa
 
 	// Convert to JSON
 	jsonData, err := json.Marshal(request)
-	fmt.Printf("jsonData := %v\n", string(jsonData))
 	req, err := http.NewRequest("POST", "https://ehurtapi.eurocash.pl/api/offer/getOfferListWithPromotions", bytes.NewBuffer(jsonData))
 	if err != nil {
 		fmt.Println("Błąd przy tworzeniu żądania:", err)
