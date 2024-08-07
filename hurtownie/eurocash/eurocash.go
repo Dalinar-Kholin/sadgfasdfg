@@ -85,18 +85,15 @@ func (e *EurocashObject) TakeToken(login, password string, client *http.Client) 
 	if csrf == "" || location == "" || veryfyer == "" || CsrfCookie == nil {
 		return false
 	}
-	fmt.Printf("csrf := %v\nlocation := %v\nveryfyer := %v\nCsrfCookie := %v\n", csrf, location, veryfyer, CsrfCookie)
 	location, cookies := sendCredentials(client, csrf, location, login, password, CsrfCookie)
 	if location == "" || cookies == nil {
 		return false
 	}
-	fmt.Printf("location := %v\ncookies := %v\n", location, cookies)
 	cookies = append(cookies, CsrfCookie)
 	code := takeCode(client, cookies, location)
 	if code == "" {
 		return false
 	}
-	fmt.Printf("code := %v\n", code)
 	accessToken := takeTokeRequest(client, code, veryfyer)
 	e.Token = accessToken
 	fmt.Printf("accessToken := %v\n", accessToken)
@@ -126,21 +123,25 @@ func (e *EurocashObject) SearchProduct(Ean string, client *http.Client) (interfa
 
 	// Convert to JSON
 	jsonData, err := json.Marshal(request)
+	fmt.Printf("jsonData := %v\n", string(jsonData))
 	req, err := http.NewRequest("POST", "https://ehurtapi.eurocash.pl/api/offer/getOfferListWithPromotions", bytes.NewBuffer(jsonData))
 	if err != nil {
 		fmt.Println("Błąd przy tworzeniu żądania:", err)
 		return nil, errors.New("Błąd przy tworzeniu żądania")
 	}
+	fmt.Printf("req := %v\n", req)
 	makeRequest(req)
 	req.Header.Set("Authorization", "Bearer "+e.Token)
 	resp, err := client.Do(req)
 	if err != nil {
+		fmt.Println("Błąd przy wykonaniu żądania:", err)
 		return nil, errors.New("Błąd przy wykonaniu żądania")
 	}
 	var itemData EurocashResponse
 	jsonReader := json.NewDecoder(resp.Body)
 	err = jsonReader.Decode(&itemData)
 	if err != nil {
+		fmt.Println("Błąd przy dekodowaniu odpowiedzi:", err)
 		return nil, errors.New("Błąd przy dekodowaniu odpowiedzi")
 
 	}
