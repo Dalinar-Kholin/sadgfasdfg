@@ -102,7 +102,3 @@ func main() {
 	//r.RunTLS("0.0.0.0:"+"443", "./cert.crt", "./key.key")
 	return
 }
-
-// w makro alholole nie działają
-// brak - zamiast brak na składzie
-// dodać tedi - około 1k nice
