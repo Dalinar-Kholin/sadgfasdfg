@@ -8,7 +8,6 @@ RUN go mod download
 
 COPY . .
 
-ENV PORT=8888
 ENV CONNECTION_STRING="mongodb+srv://pojebiemnie:pojebiemnie@simpledb.swlqbjl.mongodb.net/?retryWrites=true&w=majority&appName=simpleDB"
 
 
