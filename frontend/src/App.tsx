@@ -4,6 +4,7 @@ import MainSite from "./components/home/mainSite.tsx";
 import AppBarCustomed from "./components/appBar/appBar.tsx";
 import {createTheme, CssBaseline, ThemeProvider} from "@mui/material";
 import useCheckCookie from "./customHook/useCheckCookie.ts";
+import Tariff from "./components/tariff/Tariff.tsx";
 
 
 const darkTheme = createTheme({
@@ -19,24 +20,6 @@ function CheckCookie() {
 }
 
 function App() {
-     // sporawdza czy jest G a jeżeli nie to przekierowuje na stronę logowania
-
-    /*useEffect(() => { // powino być odpowiedzialne za wysłanie requesta do serwera z informacją o opuszczeniu strony -- wylogowanie i brak potrzeby sprawdzania sesji
-        const handleBeforeUnload = () => {
-            // Użycie navigator.sendBeacon do wysłania danych
-            fetch('https://127.0.0.1:8080/api/exit', {
-                method: "POST",
-                credentials: "include"
-            })
-        };
-
-        window.addEventListener('beforeunload', handleBeforeUnload);
-
-        // Usuwanie zdarzenia po odmontowaniu komponentu
-        return () => {
-            window.removeEventListener('beforeunload', handleBeforeUnload);
-        };
-    }, []);*/ // jeden wielki chuj, nie ma sensu usuwać ciasteczek, ponieważ użytkownik przy każdym realodzie musiłby restartować sesję i logować się ponownie
 
     return (
         <div>
@@ -48,6 +31,8 @@ function App() {
                     <Routes>
                         <Route path={"/login"} element={<LoginForm/>}/>
                         <Route path={"/main"} element={<MainSite/>}/>
+                        <Route path={"/cennik"} element={<Tariff/>}/>
+                        <Route path={"/ustawienia"} element={<MainSite/>}/>
                         <Route path={"/*"} element={<Navigate to={"/main"}/>}/>
                     </Routes>
                 </Router>

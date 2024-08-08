@@ -1,7 +1,7 @@
 import {IHurtInfoForComp} from "./components/home/handleResult/handleResultInterfaces.ts";
 import {IServerMultipleDataResult} from "./components/home/resultGrabbers.ts";
 
-export type PATH="home" | "aboutMe" | "projectSite"
+export type PATH= "main" | "cennik" | "ustawienia" | "login"
 
 
 export enum hurtNames{

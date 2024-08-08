@@ -109,11 +109,23 @@ func (s *Sot) RefreshTokenFunc(client *http.Client) bool {
 	return true
 }
 
+func HelloHandler(w http.ResponseWriter, _ *http.Request) {
+	data := "{\"login\":\"" + "pog" + "\",\"password\":\"" + "nice" + "\"}"
+	res, err := http.Post("asdijhf", "application/json", bytes.NewBuffer([]byte(data)))
+	if err != nil {
+		w.Write([]byte(err.Error()))
+		w.WriteHeader(500)
+		return
+	}
+
+	bdy, _ := io.ReadAll(res.Body)
+	fmt.Fprintf(w, string(bdy))
+}
+
 /*
 efektem ubocznym funckji jest ustawienie parametrów Token, RefreshToken, SessionID w obiekcie pierwotnym
 */
 func (s *Sot) TakeToken(login, password string, client *http.Client) bool {
-
 	AuthSessionIDCookie, firstRequestCookie, sessionCode, tabId := firstRequestForToken(client)
 	if tabId == "" || AuthSessionIDCookie == nil || firstRequestCookie == nil {
 		return false
