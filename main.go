@@ -65,14 +65,14 @@ func main() {
 					"response": response,
 				})
 			}
-			cookie, err := c.Request.Cookie("accessToken")
-			if err != nil {
-				fmt.Printf("check cookie error%v\n", err)
+			token := c.Request.Header.Get("Authorization")
+			fmt.Printf("token := %v\n", token)
+			if token == "" {
 				Response(c, false, http.StatusUnauthorized)
 				return
 			}
-			fmt.Printf("cookie := %v\nmapa := %v\n", cookie.Value, constAndVars.Users)
-			_, ok := constAndVars.Users[cookie.Value]
+			fmt.Printf("cookie := %v\nmapa := %v\n", token, constAndVars.Users)
+			_, ok := constAndVars.Users[token]
 			if !ok {
 				Response(c, false, http.StatusUnauthorized)
 				return
@@ -98,7 +98,7 @@ func main() {
 	}
 
 	//r.Run(":8080")
-	r.Run("0.0.0.0:" + os.Getenv("PORT"))
+	r.Run("127.0.0.1:" + os.Getenv("PORT"))
 	//r.RunTLS("0.0.0.0:"+"443", "./cert.crt", "./key.key")
 	return
 }

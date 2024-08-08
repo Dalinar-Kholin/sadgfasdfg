@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"optimaHurt/constAndVars"
 	"optimaHurt/hurtownie"
+	"optimaHurt/user"
 	"sync"
 )
 
@@ -13,18 +14,24 @@ type Order struct {
 }
 
 func (o *Order) MakeOrder(c *gin.Context) {
-	cookie, err := c.Cookie("accessToken")
-	if err != nil {
+	token := c.Request.Header.Get("Authorization")
+
+	if token == "" {
 		c.JSON(400, gin.H{
 			"error": "where Token?",
 		})
 		return
-	} // po testach do zmiany
-	userInstance := constAndVars.Users[cookie]
-
+	}
+	var ok bool
+	var userInstance user.User
+	if userInstance, ok = constAndVars.Users[token]; !ok {
+		c.JSON(400, gin.H{
+			"error": "where logowanie?",
+		})
+	}
 	var list hurtownie.WishList
 	responseReaderJson := json.NewDecoder(c.Request.Body)
-	err = responseReaderJson.Decode(&list)
+	err := responseReaderJson.Decode(&list)
 	if err != nil {
 		c.JSON(400, gin.H{
 			"error": "bad list",

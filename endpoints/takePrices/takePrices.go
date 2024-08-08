@@ -12,14 +12,21 @@ type TakePrices struct {
 }
 
 func (t *TakePrices) TakePrice(c *gin.Context) {
-	cookie, err := c.Cookie("accessToken")
-	if err != nil {
+	token := c.Request.Header.Get("Authorization")
+
+	if token == "" {
 		c.JSON(400, gin.H{
 			"error": "where Token?",
 		})
 		return
-	} // po testach do zmiany
-	userInstance := constAndVars.Users[cookie]
+	}
+	var ok bool
+	var userInstance user.User
+	if userInstance, ok = constAndVars.Users[token]; !ok {
+		c.JSON(400, gin.H{
+			"error": "where logowanie?",
+		})
+	}
 	ean := c.Query("ean")
 	var wg sync.WaitGroup
 	ch := make(chan interface{})

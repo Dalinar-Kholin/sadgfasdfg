@@ -1,6 +1,7 @@
 import {IHurtInfoForComp} from "./handleResult/handleResultInterfaces.ts";
 import {handleResults} from "./handleResult/handleResults.ts";
 import {hurtNames, IItemToSearch} from "../../interfaces.ts";
+import fetchWithAuth from "../../typeScriptFunc/fetchWithAuth.ts";
 
 export function getHurtResult(Ean: string): Promise<IHurtInfoForComp[]> {
     const url = "/api/takePrice?" + new URLSearchParams({ean: Ean});
@@ -8,7 +9,7 @@ export function getHurtResult(Ean: string): Promise<IHurtInfoForComp[]> {
 
     let newData: IHurtInfoForComp[] = [];
 
-    return fetch(url, {
+    return fetchWithAuth(url, {
         credentials: "include",
         method: "GET",
     }).then(response => {
@@ -39,7 +40,7 @@ export async function getMultipleHurtResult(Items: IItemToSearch[]) {
     const map = new Map<string, IServerMultipleDataResult[]>();
 
     try {
-        const response = await fetch("/api/takePrices", {
+        const res = fetchWithAuth("/api/takePrices", {
             credentials: "include",
             method: "POST",
             body: JSON.stringify({Items: Items}),
@@ -47,13 +48,7 @@ export async function getMultipleHurtResult(Items: IItemToSearch[]) {
                 "Content-Type": "application/json"
             }
         });
-
-        if (response.status !== 200) {
-            throw new Error("Error");
-        }
-
-        const data = await response.json();
-
+        const data = await res.then(response => {return response.json();});
         data.map((i : any) => {
             i.Result.map((item : any) => {
                 const itemArray = map.get(item.Ean);

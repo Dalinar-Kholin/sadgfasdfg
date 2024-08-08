@@ -22,39 +22,39 @@ type LoginBodyData struct {
 	Password string `json:"password"`
 }
 
-func MakeNewUser(dbUser user.DataBaseUserObject) (userInstance *user.User, isLogged bool) {
+func MakeNewUser(dbUser user.DataBaseUserObject) (userInstance *user.User, availableHurts hurtownie.HurtName, resultsLogin []ChannelResponse) {
 	var hurtTab []hurtownie.IHurt
 
 	var wg sync.WaitGroup
-
-	/*	proxyURL, err := url.Parse("http://127.0.0.1:8000")
-		if err != nil {
-			fmt.Println("Error parsing proxy URL:", err)
-			return nil, false
-		}
-
-		// Step 2: Create a transport that uses the proxy
-		transport := &http.Transport{
-			Proxy: http.ProxyURL(proxyURL),
-		}*/
 
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
-		//Transport: transport,
 	}
 
-	ch := make(chan bool)
-
-	for _, creds := range dbUser.Creds { // do poprawy nie działa gdy użytkownik ma różną liczbę credsów względem hurtowni
-		fmt.Printf("creds := %v\n", creds)
+	ch := make(chan ChannelResponse)
+	var credsEnum hurtownie.HurtName = 0
+	for _, creds := range dbUser.Creds {
 		instance, _ := factory.HurtFactory(creds.HurtName)
 		hurtTab = append(hurtTab, instance)
+		credsEnum += creds.HurtName
 		wg.Add(1)
-		go func(hurt *hurtownie.IHurt, wg *sync.WaitGroup, ch chan<- bool) {
+		go func(hurt *hurtownie.IHurt, wg *sync.WaitGroup, ch chan<- ChannelResponse) {
 			defer wg.Done()
-			ch <- (*hurt).TakeToken(creds.Login, creds.Password, client)
+			res := (*hurt).TakeToken(creds.Login, creds.Password, client)
+			name := (*hurt).GetName()
+			if res {
+				ch <- ChannelResponse{
+					Hurt:    name,
+					Success: true,
+				}
+			} else {
+				ch <- ChannelResponse{
+					Hurt:    name,
+					Success: false,
+				}
+			}
 		}(&instance, &wg, ch)
 	}
 	go func() {
@@ -62,15 +62,24 @@ func MakeNewUser(dbUser user.DataBaseUserObject) (userInstance *user.User, isLog
 		close(ch)
 	}()
 
+	res := make([]ChannelResponse, len(hurtTab))
+	i := 0
 	for x := range ch {
-		if !x {
-			return nil, false
+		if x.Success {
+			availableHurts += x.Hurt
 		}
+		res[i] = x
+		i++
 	}
-	isLogged = true
 	userInstance = &user.User{Client: client, Hurts: hurtTab, Creds: dbUser.Creds}
+	resultsLogin = res
 	fmt.Printf("userInstance := %v\n", userInstance)
 	return
+}
+
+type ChannelResponse struct {
+	Hurt    hurtownie.HurtName `json:"hurt"`
+	Success bool               `json:"success"`
 }
 
 func (a AccountEndpoint) Login(c *gin.Context) {
@@ -99,8 +108,8 @@ func (a AccountEndpoint) Login(c *gin.Context) {
 		return
 	}
 	fmt.Printf("dataBaseResponse := %v\n", dataBaseResponse)
-	userInstance, isLogged := MakeNewUser(dataBaseResponse)
-	if !isLogged {
+	userInstance, loggedHurts, loginLog := MakeNewUser(dataBaseResponse)
+	if loggedHurts == 0 {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "cant logged to selected Hurts"})
 		return
 	}
@@ -110,11 +119,14 @@ func (a AccountEndpoint) Login(c *gin.Context) {
 		return
 	}
 	resToken := sha3.Sum256(newToken)
-	shildedToken := hex.EncodeToString(resToken[:])
+	shieldedToken := hex.EncodeToString(resToken[:])
 	//shieldedToken := base64.StdEncoding.EncodeToString(newToken) // token jest użytkowany tylko podczas sesji, więc nie ma potrzeby przechowywania go w bazie danych
-	Users[shildedToken] = *userInstance
-	c.SetCookie("accessToken", shildedToken, 0, "/", "/", true, false) // httpOnly musi być false, aby js mógł odczytać ciasteczko i dołączyć je do kończenia sesji
-	c.JSON(200, gin.H{"result": "success"})
+	Users[shieldedToken] = *userInstance
+	c.JSON(200, gin.H{
+		"result":         loginLog,
+		"token":          shieldedToken,
+		"availableHurts": loggedHurts},
+	)
 }
 
 //

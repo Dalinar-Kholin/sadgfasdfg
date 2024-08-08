@@ -16,6 +16,7 @@ import InputComp from "./inputField/InputField.tsx";
 import stratchInputType from "./inputField/handleInputTypes/stracher.ts";
 import Box from '@mui/material/Box';
 import {getHurtResult, getMultipleHurtResult} from "./resultGrabbers.ts";
+import fetchWithAuth from "../../typeScriptFunc/fetchWithAuth.ts";
 
 // niebieska obwódka -- najtańszy pakiet
 // zielona obwódka -- najtanicej za produkt
@@ -32,7 +33,6 @@ export default function MainSite() {
 
     const [errorMessage, setErrorMessage] = useState<string>("")
 
-    const [lowerHurt, setLowerHurt] = useState<hurtNames>(hurtNames.none)
     const [isLoadingProduct, setIsLoadingProduct] = useState<boolean>(false)
 
 
@@ -129,6 +129,10 @@ export default function MainSite() {
     }, []) // tworzenie nowej hashMapy aby nie świeciło pustkami
 
     useEffect(() => {
+        if (prodToSearch.length === 0) {
+            return;
+        }
+
         setIsLoadingProduct(true)
         try {
             getMultipleHurtResult(prodToSearch).then(data => {
@@ -222,8 +226,6 @@ export default function MainSite() {
                                 setComponentHashTable(newMap)
                             }
 
-                            setLowerHurt(Math.max(...data.map(item => item.priceForOne)) === -1 ?
-                                hurtNames.none : data.find(item => item.priceForOne === Math.max(...data.map(item => item.priceForOne)))?.hurtName || hurtNames.none)
                             setIsLoadingProduct(false)
                         });
                     }catch (e: any){
@@ -234,7 +236,6 @@ export default function MainSite() {
             />
 
             <p></p>
-            {hurtNames[lowerHurt]}
             <Box style={{display: "flex", justifyContent: "space-around", alignItems: "center"}}>
                 {!isLoadingProduct ? (
                     <div className={"hurtResults"}
@@ -271,7 +272,7 @@ export default function MainSite() {
             {optItems.length !== 0 ?
                 <Button variant="contained" color="success" sx={{margin: "20px", padding: "5px"}} onClick={() => {
                     setErrorMessage("")
-                    fetch("/api/makeOrder", {
+                    fetchWithAuth("/api/makeOrder", {
                         method: "POST",
                         body: JSON.stringify({Items: optItems.map(item => {
                             return {

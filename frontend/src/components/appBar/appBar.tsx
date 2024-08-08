@@ -30,7 +30,9 @@ export default function AppBarCustomed(/*{iconLink}:IAppBarCustomed*/){
             <AppBar position="sticky" id={"appBarComp"}>
                 <Container maxWidth="xl">
                     <Toolbar disableGutters>
-                        <Box className="photo" component="img" src={"./assets/nicea.jpeg"} alt="Logo" style={Style.logoIcon} />
+                        <Box className="photo" component="img" src={"./assets/nicea.jpeg"} alt="Logo" style={Style.logoIcon} onClick={()=>{
+                            navigate('/main');
+                        }} />
                         <Box >
                             {pages.map((page) => (
                                 <Button

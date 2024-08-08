@@ -10,8 +10,9 @@ import (
 )
 
 func CheckTokenCurrency(c *gin.Context) {
-	token, err := c.Cookie("accessToken")
-	if err != nil {
+	token := c.Request.Header.Get("Authorization")
+
+	if token == "" {
 		c.JSON(400, gin.H{
 			"error": "where Token?",
 		})

@@ -57,12 +57,16 @@ export default function LoginForm(){
                     }
                     return response.json();
                 }).then(data => {
+
+                    localStorage.setItem("accessToken", data.token)
+                    localStorage.setItem("availableHurts", "" + data.loggedHurts)
+
                     setIsProperData(true)
                     setUsername("")
                     setPassword("")
+                    navigate("/main")
                     // dodać ciasteczka
                     // przenieść na stronę główną
-                    navigate("/main")
                     console.log(data)
                 }).catch(error => {
                     console.error('There has been a problem with your fetch operation:', error);

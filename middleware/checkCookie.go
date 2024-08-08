@@ -7,8 +7,9 @@ import (
 
 func CheckToken(c *gin.Context) {
 
-	token, err := c.Cookie("accessToken")
-	if err != nil {
+	token := c.Request.Header.Get("Authorization")
+
+	if token == "" {
 		c.JSON(400, gin.H{
 			"error": "where Token?",
 		})
@@ -19,6 +20,7 @@ func CheckToken(c *gin.Context) {
 		c.JSON(400, gin.H{
 			"error": "where logowanie?",
 		})
+		return
 	}
 	c.Next()
 } // globalna mapa mapująca TOKEN na usera

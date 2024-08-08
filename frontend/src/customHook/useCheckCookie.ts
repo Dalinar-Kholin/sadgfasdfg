@@ -1,12 +1,13 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import fetchWithAuth from "../typeScriptFunc/fetchWithAuth.ts";
 
 const useCheckCookie = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
         const checkCookie = async () => {
-            fetch('/api/checkCookie', {
+            fetchWithAuth('/api/checkCookie', {
                 method: 'POST',
                 headers: {
                     credentials: 'include'
